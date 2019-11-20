@@ -626,7 +626,7 @@ impl PlayerInternal {
         let audio = AudioItem::get_audio_item(&self.session, spotify_id)
             .wait()
             .unwrap();
-        info!("Loading <{}> with Spotify URI <{}>", audio.name, audio.uri);
+        cmd_lib::run_cmd!("say Loading <{}> with Spotify URI <{}>", audio.name, audio.uri);
 
         let audio = match self.find_available_alternative(&audio) {
             Some(audio) => audio,
