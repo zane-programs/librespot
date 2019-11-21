@@ -10,6 +10,8 @@ use std::mem;
 use std::sync::mpsc::{RecvError, RecvTimeoutError, TryRecvError};
 use std::thread;
 use std::time::Duration;
+//use regex::Regex;
+use redis;
 
 use config::{Bitrate, PlayerConfig};
 use librespot_core::session::Session;
@@ -626,7 +628,15 @@ impl PlayerInternal {
         let audio = AudioItem::get_audio_item(&self.session, spotify_id)
             .wait()
             .unwrap();
-        cmd_lib::run_cmd!("say Loading <{}> with Spotify URI <{}>", audio.name, audio.uri);
+        // REDIS THINGS
+	let client = try!(redis::Client::open("redis://127.0.0.1/"));
+	let con = client.get_connection()?;
+        redis::cmd("PUBLISH").arg("spotify-name").arg(audio.name).execute(&con);
+	redis::cmd("PUBLISH").arg("spotify-uri").arg(audio.uri).execute(&con);
+        //let re = Regex::new(r"'").unwrap();
+        //let audioName = re.replace_all(&audio.name, "\\'");
+        //info!(r#"/home/pi/smart-screen-new/update-playing.sh $'{}' $'{}'"#, audio.name, audio.uri);
+        //cmd_lib::run_cmd!(r#"/home/pi/smart-screen-new/update-playing.sh $'{}' $'{}'"#, audio.name, audio.uri);
 
         let audio = match self.find_available_alternative(&audio) {
             Some(audio) => audio,
